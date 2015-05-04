@@ -28,7 +28,8 @@ node['user']['user_array_node_attr'].split("/").each do |hash_key|
   user_array = user_array.send(:[], hash_key)
 end
 
-groups = {}
+groups  = {}
+managed = []
 
 # only manage the subset of users defined
 Array(user_array).each do |i|
@@ -43,6 +44,8 @@ Array(user_array).each do |i|
     action Array(u['action']).map { |a| a.to_sym } if u['action']
   end
 
+  managed << u if u['action'] != 'remove'
+
   unless u['groups'].nil? || u['action'] == 'remove'
     u['groups'].each do |groupname|
       groups[groupname] = [] unless groups[groupname]
@@ -50,6 +53,8 @@ Array(user_array).each do |i|
     end
   end
 end
+
+node.set["user"]["managed"] = managed
 
 groups.each do |groupname, users|
   group groupname do
